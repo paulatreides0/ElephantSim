@@ -10,9 +10,11 @@ class ElephantReserve:
 		self.mapSize		=	random.randint(1, 10)		#size of environment
 		self.map			=	[]							#list of provinces in map, len(map) = size
 		
+		#Provinces are made up of biomes
 		for province in range(self.mapSize):
 			province		=	Biomes.Biome()
 			province.name	=	str(province.type) + " Province " + str(self.num)
+			province.id		=	
 			
 			self.map.append(province)	
 		
