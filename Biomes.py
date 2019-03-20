@@ -3,31 +3,32 @@ import random
 
 #Biomes serve as environmental subsections as well as provinces
 class Biome:
-	def __init__(name = "Unnamed", type = "Indeterminate", size = random.randint(1, 10)):
-		##Biome reference information
+	def __init__(self, name, type, size, month):
+		#Biome reference information
 		self.name		=	name						#name only has fluff purposes
 		self.type		=	type						#string-type, name of biome type
-		self.idlabel	=	"00xInd"					#Used to dynamically generate
-		self.id			=	0							#Identification code of province, used as defacto name
+		self.idLabel	=	"00xInd"					#Used to dynamically generate names
+		self.provNum	=	0							#Another name of province, references it as a number, e.g. "Province 1"
+		self.id			=	0							#Identification code of province, used as defacto name, idlabel + provnNum e.g. 00xInd[n]01
 	
-		##Stores & Governs connections between biomes
+		#Stores & Governs connections between biomes
 		self.noLink		=	[]							#List-type, which biomes the biome cannot be directly next to - uses idLabels as list elements
 		self.linkCap	=	4							#Limit on number of connections between provinces, defaults to 4
 		self.linkMap	=	[]							#List-type, documents which other biomes this biome is connected to as Biome-objects
 	
-		##Handles primary biome mods - temperature, water, and size
+		#Handles primary biome mods - temperature, water, and size
 		self.temp		=	random.randint(0, 2)		#temperature, -5 to 5 scale, 0 is default, 2 to 3 is ideal, -5 is instant total death, 4+ is too hot
 		self.water		=	random.randint(0, 2)		#environmental water supply, -5 to 5 scale, 0 is default, 2 to 3 is ideal, -5 is instant total death, 4+ is flooding
 		self.size		=	size						#size of biome, from 1 (tiny) to 10 (gigantic)
 		
-		##Special Features - Can modify individual biomes
+		#Special Features - Can modify individual biomes
 		self.features	=	[]							#list-type, containing special features of biome
 		self.featsMod	=	0
 		for feature in self.features:
 			self.featsMod += features[feature].popMod
 		
 		
-		##tempMod defines temperature modifier on popCap
+		#tempMod defines temperature modifier on popCap
 		tempFactor1			=	-0.15			#Temp factor when temp -5 < temp < 0
 		tempFactor2			=	0.00			#Temp factor when 0 <= temp < 2 & 3 <= temp < 4
 		tempFactor3			=	0.05			#Temp factor when 2 <= temp < 3
@@ -35,17 +36,17 @@ class Biome:
 		if self.temp == -5:
 			self.tempMod	=	0
 		elif -5 < self.temp < 0:
-			self.tempMod	=	1+(tempFactor1*self.temp))
+			self.tempMod	=	1+(tempFactor1*self.temp)
 		elif 0 <= self.temp < 2:
-			self.tempMod	=	1+(tempFactor2*self.temp))
+			self.tempMod	=	1+(tempFactor2*self.temp)
 		elif 2 <= self.temp < 3:
-			self.tempMod	=	1+(tempFactor2*self.temp))
+			self.tempMod	=	1+(tempFactor2*self.temp)
 		elif 3 <= self.temp < 4:
-			self.tempMod	=	1+(tempFactor2*self.temp))
+			self.tempMod	=	1+(tempFactor2*self.temp)
 		else:
 			self.tempMod	=	1+(tempFactor2*(2 - self.temp))
 		
-		##waterMod defines humidity modifier on popCap
+		#waterMod defines humidity modifier on popCap
 		waterFactor1			=	-0.20			#Water factor when water -5 < water < 0
 		waterFactor2			=	0.00			#Water factor when 0 <= water < 2 & 3 <= temp < 4
 		waterFactor3			=	0.075			#Water factor when 2 <= water < 3
@@ -53,13 +54,13 @@ class Biome:
 		if self.water == -5:
 			self.waterMod	=	0
 		elif -5 < self.water < 0:
-			self.waterMod	=	1+(waterFactor1*self.water))
+			self.waterMod	=	1+(waterFactor1*self.water)
 		elif 0 <= self.water < 2:
-			self.waterMod	=	1+(waterFactor2*self.water))
+			self.waterMod	=	1+(waterFactor2*self.water)
 		elif 2 <= self.water < 3:
-			self.waterMod	=	1+(waterFactor2*self.water))
+			self.waterMod	=	1+(waterFactor2*self.water)
 		elif 3 <= self.water < 4:
-			self.waterMod	=	1+(waterFactor2*self.water))
+			self.waterMod	=	1+(waterFactor2*self.water)
 		else:
 			self.waterMod	=	1+(waterFactor2*(2 - self.water))
 			
@@ -74,80 +75,81 @@ class Biome:
 		#self.predatorCap	=	0
 		self.predationMod	=	1					#Temporary Value, will change when module properly introduced
 		
-		##Initial carrying capacity of biome, can change with events & disasters
+		#Initial carrying capacity of biome, can change with events & disasters
 		self.biomePopMod = 0							
 		for sizeFactor in range(self.size):
 			self.biomePopMod += random.randint(500,1000)
 			
-		self.carryingCap	=	self.biomePopMod*self.waterMod*self.tempMod*self.featsMod*self.disasterMod*self.predationMod
+		self.carryingCap	=	self.biomePopMod*self.waterMod*self.tempMod*self.featsMod*self.disastersMod*self.predationMod
 	
-	def UpdateCarryCap(self):
+	def updateCarryCap(self):
 		self.carryingCap	=	self.biomePopMod*self.waterMod*self.tempMod*self.featsMod
 		
-	def UpdateSizeMod(self, newSize):
+	def updateSizeMod(self, newSize):
 		self.size	+=	newSize
-		UpdateCarryCap()
+		self.updateCarryCap()
 	
-	def UpdateTempMod(self):
+	def updateTempMod(self):
 		if self.temp < 0:
-			self.tempMod	=	1+(tempFactor1*self.temp))
+			self.tempMod	=	1+(tempFactor1*self.temp)
 		elif 0 <= self.temp <= 3:
-			self.tempMod	=	1+(tempFactor2*self.temp))
+			self.tempMod	=	1+(tempFactor2*self.temp)
 		else:
 			self.tempMod	=	1+(tempFactor2*(2 - self.temp))
-		
-		UpdateCarryCap()
+		self.updateCarryCap()
 			
-	def UpdateWaterMod(self):
+	def updateWaterMod(self):
 		if self.water < 0:
-			self.waterMod	=	1+(waterFactor1*self.water))
+			self.waterMod	=	1+(waterFactor1*self.water)
 		elif 0 <= self.water <= 3:
-			self.waterMod	=	1+(waterFactor2*self.water))
+			self.waterMod	=	1+(waterFactor2*self.water)
 		else:
 			self.waterMod	=	1+(waterFactor2*(2 - self.water))
-	
-		UpdateCarryCap()
+		self.updateCarryCap()
 		
-	def Rename(self, newName):
+	def rename(self, newName):
 		self.name = str(newName)
 			
-	def RainyMonth(self):
+	def rainyMonth(self):
 		self.water += 1
-		UpdateWaterMod()
+		self.updateWaterMod()
 			
-	def TorrentialRain(self):
+	def torrentialRain(self):
 		self.water += 2
-		UpdateWaterMod()
+		self.updateWaterMod()
 		
-	def HurricaneRain(self):
+	def typhoonRain(self):
 		self.water += 3
-		UpdateWaterMod()
+		self.updateWaterMod()
 		
-	def DryMonth(self):
+	def dryMonth(self):
 		self.water -= 1
-		UpdateWaterMod()
+		self.updateWaterMod()
 	
-	def AridMonth(self):
+	def aridMonth(self):
 		self.water -= 2
 		self.temp += 1
-		UpdateTempMod()
-		UpdateWaterMod()
+		self.updateTempMod()
+		self.updateWaterMod()
 		
-	def HotMonth(self):
+	def hotMonth(self):
 		self.temp += 1
-		UpdateTempMod()
+		self.updateTempMod()
 		
-	def HeatWave(self):
+	def heatWave(self):
 		self.temp += 2
-		UpdateTempMod()
+		self.updateTempMod()
 		
-	def ColdSnap(self):
+	def coldSnap(self):
 		self.temp -= 1
-		UpdateTempMod()
+		self.updateTempMod()
 		
-	def ArcticFront(self):
+	def arcticFront(self):
 		self.temp -= 2
-		UpdateTempMod()
+		self.updateTempMod()
+		
+	#def updateBiome(self):
+		#Method for dynamically changing biome and biomerestrictions over time
 		
 	#def Terraform(self, featureRemove = [], featureAdd = [])
 	#	for feature in featureRemove:
@@ -229,7 +231,7 @@ class Grasslands(Biome):
 class Taiga(Biome):
 
 	def __init__(self):
-		Biome.__init__(type = "Taiga" = random.randint(1, 10))
+		Biome.__init__(type = "Taiga", size = random.randint(1, 10))
 		
 		self.idlabel	=	"11xTaig"
 		self.noLink		=	["04xRnft", "08xDsrt"]
