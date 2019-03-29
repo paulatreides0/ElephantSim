@@ -1,3 +1,7 @@
+Future expansion:
+1) Incoporate SQL as database for different reserves
+2) Incorporate GUI
+
 3/29/19:
 More features running. Having errors on elephant death. Birth mechanics not properly implemented.
 
@@ -8,7 +12,3 @@ Next (immediate) steps
 1) Incorporate information-pulling methods
 2) Run model to check viability & tweak accordingly
 3) Add user-interface input to facilitate pulls and model controls
-
-Future expansion:
-1) Incoporate SQL as database for different reserves
-2) Incorporate GUI
