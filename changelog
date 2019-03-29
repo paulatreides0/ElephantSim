@@ -1,5 +1,8 @@
+3/29/19:
+More features running. Having errors on elephant death. Birth mechanics not properly implemented.
+
 3/20/19:
-First workable release. All basic functionality should be up and running now.
+First workable/running release. All basic functionality should be up and running now. Have to fix numerous error cases.
 
 Next (immediate) steps
 1) Incorporate information-pulling methods
