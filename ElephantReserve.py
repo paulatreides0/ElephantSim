@@ -10,21 +10,16 @@ class ElephantReserve:
 		#Static Factors
 		self.name			=	name
 		self.mapSize		=	mapSize			#size of environment
-		self.map			=	[]				#list of 2-lists, provinces in map, len(map) = size, entries are in format [province, provPop]
+		self.map			=	[]				#list of 2-lists, provinces in map, len(map) = mapSize, entries are in format [province, provPop]
 		
 		#Time Tracking		
-		self.month			=	0				#Current simulation month (of year)
-		self.monthTot		=	0				#Current simulation month (total # of months since start)
+		self.month			=	1				#Current simulation month (of year)
+		self.monthTot		=	1				#Current simulation month (total # of months since start)
 		self.year			=	0				#Current simulation year
 		
 		#Total Reserve Tracking Info
 		self.reserveCarryingCap	=	0
 		self.reservePopulation	=	0
-		
-		#Time Tracking
-		self.month			=	0
-		self.year			=	0
-		self.monthTot		=	0
 		
 		#Trackers for keeping track of which province and population we are on
 		self.provNum = 0					#Numerical value of next province
@@ -42,25 +37,37 @@ class ElephantReserve:
 			self.provNum += 1
 			
 			#Create pop in biome/Province
-			newPop = ElephantPop.ElephantPop(newProv.id, self.popNum, newProv.carryingCap, self.month, self.monthTot, self.elephantNum, popInit = 100)
+			newPop = ElephantPop.ElephantPop(newProv.id, self.popNum, newProv.carryingCap, self.month, self.monthTot, self.elephantNum, popInit = 10000)
 			self.popNum	+=	1
 			
 			self.map.append([newProv, newPop])
 			
 			self.reserveCarryingCap	+=	newProv.carryingCap
 			self.reservePopulation 	+=	newPop.population
+			
+	def census(self, initCheck = False):
+		if initCheck == False:
+			print("Reserve Population Census - Year %d: %d" %(self.year, self.reservePopulation))
+		else:
+			print("Initial Population Census - Year %d: %d" %(self.year, self.reservePopulation))
 		
 	def updateReserve(self):
 		self.monthTot += 1
 		if self.month < 12:
 			self.month += 1
+			#print("Month:", self.month)
 		else:
-			self.month = 0
+			self.month = 1
 			self.year += 1
+			print("Year:", self.year)
+			self.census()
+			#print("Month:", self.month)
 		
+		self.reservePopulation = 0
 		for province in self.map:
 			#province[0].updateBiome()
 			province[1].updatePop()
+			self.reservePopulation += len(province[1].popList)
 		
 	#def migration(self, oldProvince, newProvince):
 		

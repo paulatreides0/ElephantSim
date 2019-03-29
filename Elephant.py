@@ -5,15 +5,15 @@ class Elephant:
 	def __init__(self, elephantNum, biomeId, month, monthTot, initPop = False):
 		#Static Factors & Tracking Information
 		self.trackid		=	biomeId + "n" + str(elephantNum) 							#equivalent of name, native biomeId plus elephant number
-		self.elephantNum	=	elephantNum + 1											#lists elephant #, simpler than trackid, current elephant number gets tracked at global level
-		self.sex			=	random.choice(["m", "f"])										#"f" for female, "m" for male
-		self.birthday		=	[monthTot%12 + 1, math.floor(monthTot/12), monthTot]		#3-List in format [month, year, monthTot]
-		self.lineage		=	[0,0]														#2-List, tracks [mother, father] of elephant as elephant-objects
+		self.elephantNum	=	elephantNum + 1												#lists elephant #, simpler than trackid, current elephant number gets tracked at global level
+		self.sex			=	random.choice(["m", "f"])									#"f" for female, "m" for male
+		self.birthDay		=	[monthTot%12 + 1, math.floor(monthTot/12), monthTot]		#3-List in format [month, year, monthTot]
+		self.lineage		=	["Unknown","Unknown"]										#2-List, tracks [mother, father] of elephant as elephant-objects
 		#self.ancestry		=	[]															#Might add later, stores as a list the % of ancestry elephant has to each biome pop
 		
 		#Dynamic Factors & Tracking Information
 		##Stages:
-		##0 - baby, 1 - child, 2 - teenager, 3 - adult, 4 - Senior, 5 - Hospiced
+		##0 - baby, 1 - child, 2 - teenager, 3 - adult  (**ONLY STAGE ABLE TO MAKE BABIES**), 4 - Elder, 5 - Hospiced
 		self.age			=	[0,0]						#2-List in format [year-age, month-age]				
 		self.lifeStage		=	0							#Tracks developmental stage of elephant
 		self.health			=	2							#2-List, ["base health", current health] tracks well being of elephant on a 1 to 10 scale, 0 results in death, < 2 results in higher chances for negative health events
@@ -26,11 +26,11 @@ class Elephant:
 		#Reproductive Factors & Tracking
 		self.fertility		=	[False, 3]					#elephant fertility state, elephant fertility state
 		if self.sex == "f":
-			self.calfLine	=	[self, 0]			#3-list [length, dam, sire] - tracks length of pregnancy, birth at 22 months +/- 2 months, also tracks lineage
+			self.calfLine	=	[self, "sire"]				#2-list [dam, sire] - tracks length of pregnancy, birth at 22 months +/- 2 months, also tracks lineage
 			
 		#Life Cycle Notes:
 		##ALL PROBABILITIES ARE ANNUAL, monthly probabiilty = prob/12
-		#Elephant life cycle stages: Baby => Child => Teen => Adult => Senior => Hospice
+		#Elephant life cycle stages: Baby [0] => Child [1] => Teen [2] => Adult [3] (**ONLY STAGE ABLE TO MAKE BABIES**) => Elder [4] => Hospice [5]
 		#At least one year required between stage transitions
 		#Gestation Period:
 		#22 months (+/- 2 months)
@@ -46,39 +46,45 @@ class Elephant:
 		
 		#Initialization for elephants created as adults (init pop & outsiders)
 		if initPop == True:
-			diceRoll = random.randint()
+			diceRoll = random.random()
 			if 0 <= diceRoll <= 0.1:
 				self.age[0] = random.randint(5, 10)
 				self.health += 2
 				self.lifeStage = 1
+				#print("child made!")
 			elif 0.1 < diceRoll <= 0.3:
-				random.randint(11, 18)
+				self.age[0] = random.randint(11, 18)
 				self.health += 3
 				self.lifeStage = 2
+				#print("teen made!")
 			elif 0.3 < diceRoll <= 0.9:
-				random.randint(19, 48)
+				self.age[0] = random.randint(19, 48)
 				self.health += 4
 				self.lifeStage = 3
+				#print("adult made!")
 				if self.sex == "f":
 					if random.random() <= 0.8:
 						self.fertility[0] = True
 					else:
-						impregnate()
-						for condition in conditions():
+						self.impregnate("Unknown")
+						#print("pregnant elephant!")
+						for condition in self.conditions:
 							if "pregnant" in condition:
 								condition[1] = random.randint(1, 21)
 			elif 0.9 < diceRoll <= 1.0:
-				random.randint(48, 55)
+				self.age[0] = random.randint(48, 55)
 				self.health += 2
 				self.lifeStage = 4
 				self.fertility[0] = False
 				
-			self.birthday = [random.randint(0, 12) + 1, math.floor(monthTot/12) - self.age[0], 0]
-			self.birthday[2] = monthTot - (self.age[0] * 12 + self.birthday[0])
-			self.age[1] = self.age*12
+			self.birthDay = [random.randint(1, 12), math.floor(monthTot/12) - self.age[0], 0]
+			self.birthDay[2] = monthTot - (self.age[0] * 12 + self.birthDay[0])
+			self.age[1] = self.age[0]*12 + self.birthDay[0]
 		
 	#Updates on Annual Birthday
 	def upCycle(self):
+		upCycle = False
+		oldLifeStage = self.lifeStage
 		#baby => child transition
 		if (self.lifeStage == 0) and (3 < self.age[0] < 5):
 			if random.random() <= (1/(3*12)):
@@ -127,27 +133,47 @@ class Elephant:
 		elif (self.lifeStage == 4) and (self.age[0] >= 68):
 			self.lifeStage == 5
 			self.health -= 2
+			
+		if self.lifeStage - oldLifeStage != 0:
+			upCycle = True
+		
+		return upCycle
 		
 	def mate(self, otherElephant):
-			if random.random() <= (1/3):
-				if self.sex == "f":
-					self.fertility[1] -= -1
-					if random.random() < (0.2/12):
-						impregnate()
+		diceRoll = random.random()
+		#Fail to find partner - waste a fertility level
+		if diceRoll <= (1/3):
+			self.fertility[1] -= 1
+			#print("Didn't get lucky")
+		#Find a partner and attempt to mate
+		else:
+			#If initiator is female
+			#print("Oontz!")
+			if self.sex == "f":
+				otherElephant.fertility[1] -= 1
+				self.fertility[1] -= 1
+				if random.random() < (1/(5*12)):
+					self.impregnate(otherElephant)
+			#If initiator is male
 			else:
 				self.fertility[1] -= 1
+				otherElephant.fertility[1] -= 1
+				if random.random() < (0.2/12):
+					otherElephant.impregnate(self)
 				
 	def impregnate(self, sire):
 		self.conditions.append(["pregnant", 22])
-		self.health[0] -= 1
-		self.health[1] -= 1
+		self.health -= 1
 		self.calfLine = [self, sire]
 		self.fertility = [False, 0]
+		impregnated = True
+		#print("Elephant knocked up")
+		return impregnated
 				
-	def pregUpdate(self):	
+	def pregUpdate(self):
 		if self.pregnancy[0] < 22:
 			self.pregnancy[0] += 1
-		elif elephant.pregnancy[0] >= 22:
+		else:
 			self.pregnancy[0] = 0
 			babyElephant = Elephant(month, monthTot)
 			babyElephant.lineage = [self.pregnancy[1], self.pregnancy[2]]
@@ -160,8 +186,8 @@ class Elephant:
 				self.conditions.append(["postpartum", 6])
 				self.calfLine = [self, 0]
 				self.fertility = [True, -6]
-				babyElephant(elephantNum, biomeId, month, monthTot, initPop = False)
-				
+				babyElephant(elephantNum, biomeId, month, monthTot, initPop = False)				
+				print("baby born")
 				return babyElephant
 	
 	def sickness(self):
@@ -173,16 +199,19 @@ class Elephant:
 		if sickCheck == False:
 			#Normal illness
 			if (2 < self.health < 4) and (diceRoll <= 0.05):
-				if random.random <= 0.90:
+				if random.random() <= 0.90:
 					self.health -= 1
 					self.conditions.append(["mild sickness", random.randint(1, 6)])
+					print("elephant got sick")
 				else:
 					self.health -= 2
-					self.conditions.append(["serious sickness", random.randint(1, 3)])								
+					self.conditions.append(["serious sickness", random.randint(1, 3)])
+					print("elephant got very sick")					
 			#Serious illness more likely if health <= 2
 			elif ((self.health <= 2) and (diceRoll < 0.1 * (2 + self.health))) or ((self.health <= 4) and (self.lifeStage == 5) and (diceRoll > 0.1 * (1 + self.health))):
 				self.health -= 2
 				self.conditions.append(["serious sickness", random.randint(1, 4)])
+				print("elephant got very sick")
 		
 	def recuperate(self):
 		for condition in self.conditions:
@@ -190,36 +219,38 @@ class Elephant:
 				condition[1] -= 1
 			elif ("postpartum" in condition) and (condition[1] == 0):
 				conditions.remove(condition)
-				self.health[0] += 1
-				self.health[1] += 1
+				self.health += 1
 				
 			if ("sickness" in condition) and (condition[1] > 0):
 				self.condition[1] -= 1
 			elif ("sickness" in condition) and (condition[1] == 0):
 				if condition[1] == "mild sickness":
-					self.health[0] += 1
-					self.health[1] += 1		
+					self.health += 1
 				else:
-					self.health[0] += 2
-					self.health[1] += 2
+					self.health += 2
 				conditions.remove(condition)
 	
 	def die(self):
-		for assocation in self.associations:
-			self.association.remove(self)
+		for association in self.associations:
+			association.remove(self)
+		#print("elephant died!")
+		#print("elephant age:", self.age) 
 			
 	def updateElephant(self):
 		self.age[1] += 1
 		if self.age[1]%12 == 0:
 			self.age[0] += 1
-		if (self.fertility[1] < 3) and (self.fertility[0] == True):
-			if (0 < self.fertility < 3) or (self.fertility > 3):
+		if (self.fertility[0] == True) and (self.fertility[1] < 3):
+			if (0 < self.fertility[1] < 3) or (self.fertility[1] > 3):
 				self.fertility[1] = 3
 			else:
-				self.fertility += 3
-		
-		self.upCycle()
-		self.sickness()
+				self.fertility[1] += 3
+		#if (self.fertility[0] == True) and (self.fertility[1] == 0):
+		upCycle = self.upCycle()
+		#self.sickness()
 		self.recuperate()
-		if self.health <= 0:
+		#if self.health <= 0:
+		if (self.age[0] >= 65) and (random.random() < (0.2/12)):
 			self.die()
+			
+		return upCycle#, birth)

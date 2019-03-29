@@ -27,7 +27,6 @@ class Biome:
 		for feature in self.features:
 			self.featsMod += features[feature].popMod
 		
-		
 		#tempMod defines temperature modifier on popCap
 		tempFactor1			=	-0.15			#Temp factor when temp -5 < temp < 0
 		tempFactor2			=	0.00			#Temp factor when 0 <= temp < 2 & 3 <= temp < 4
